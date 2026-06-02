@@ -8,10 +8,28 @@ import (
 	"github.com/Shiniese/motionphoto-converter/pkg/motionphoto"
 )
 
+// 这些变量会在编译时由Makefile注入值
+var (
+	AppName   = "unknown" // 应用名称
+	Version   = "unknown" // 版本号
+	GitCommit = "unknown" // Git提交哈希
+	BuildTime = "unknown" // 编译时间
+	Author    = "unknown" // 作者
+)
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: motionphoto-converter <input_file>")
 		os.Exit(1)
+	}
+
+	// 加个 --version 参数打印版本信息
+	if len(os.Args) > 1 && os.Args[1] == "--version" {
+		fmt.Printf("%s %s\n", AppName, Version)
+		fmt.Printf("Git commit: %s\n", GitCommit)
+		fmt.Printf("Build time: %s\n", BuildTime)
+		fmt.Printf("Author: %s\n", Author)
+		return
 	}
 
 	inputFile := os.Args[1]
@@ -43,7 +61,7 @@ func main() {
 	}
 
 	// 保存提取的图片和视频（示例）
-	os.WriteFile(inputFile + ".jpg", result.Data.ImageData, 0644)
-	os.WriteFile(inputFile + ".mp4", result.Data.VideoData, 0644)
+	os.WriteFile(inputFile+".jpg", result.Data.ImageData, 0644)
+	os.WriteFile(inputFile+".mp4", result.Data.VideoData, 0644)
 	fmt.Printf("\n\n  Image saved to '%s.jpg' \n  Video saved to '%s.mp4' \n", inputFile, inputFile)
 }
