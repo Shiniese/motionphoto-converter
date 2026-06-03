@@ -1,0 +1,52 @@
+# 打一个符合 v* 格式的标签并推送，将会触发自动发布
+name: 自动发布Release
+
+# 触发规则：只有推送符合 v* 格式的标签时才执行（比如v1.0.0、v2.3.1）
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write  # 必须给写权限，否则无法创建Release和上传资产
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      # 第一步：拉取代码，必须加fetch-depth:0获取完整的git历史和标签信息
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 第二步：安装Go环境，版本可以根据项目需求调整
+      - name: 配置Go环境
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.2' # 替换为项目实际使用的Go版本
+          check-latest: true
+
+      - name: 下载Go依赖
+        run: go mod download
+
+      # 第三步：安装make（Ubuntu默认已经带了，这步可选，防止特殊情况）
+      - name: 安装依赖工具
+        run: sudo apt update && sudo apt install -y make
+
+      # 第四步：执行Makefile的package命令，编译所有平台并打包成zip/tar.gz+md5
+      - name: 跨平台编译打包
+        run: make build-all
+
+      # 第五步：创建Release并上传所有打包产物
+      - name: 发布到GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.event.repository.name }} ${{ github.ref_name }}
+          body: |
+            版本 `${{ github.ref_name }}` 自动发布
+            - Git提交哈希：${{ github.sha }}
+            - 编译时间：${{ github.event.head_commit.timestamp }}
+          files: ./build/* # 上传build目录下所有打包好的文件
+          fail_on_unmatched_files: true # 匹配不到文件时工作流失败，方便排查问题
+          generate_release_notes: true # 可选：自动生成版本变更日志（基于PR和提交记录）
