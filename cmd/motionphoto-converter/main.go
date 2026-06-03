@@ -41,11 +41,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 模拟从文件提取的 XMP 信息（实际应从 JPEG/HEIC 元数据解析）
-	xmpInfo := motionphoto.ExtractXMPInfo(data)
-
 	// 处理动态照片
-	result := motionphoto.ProcessMotionPhoto(data, xmpInfo)
+	result := motionphoto.ProcessMotionPhoto(data)
 	if !result.Success {
 		slog.Error("Failed to process motion photo", "err", *result.ErrorMessage)
 		os.Exit(1)
